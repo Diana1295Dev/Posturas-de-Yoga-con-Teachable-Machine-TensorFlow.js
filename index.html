@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>🧘‍♀️ Clasificador de Posturas de Yoga</title>
+
+  <!-- Librerías de TensorFlow.js y Teachable Machine -->
+  <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@latest"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@teachablemachine/image@latest"></script>
+
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      text-align: center;
+      margin-top: 40px;
+      background-color: #f7f8fc;
+      color: #333;
+    }
+    h1 {
+      color: #5c3d9b;
+    }
+    p {
+      font-size: 1.1em;
+      margin-bottom: 20px;
+    }
+    input {
+      margin: 10px;
+      padding: 8px;
+    }
+    img {
+      max-width: 400px;
+      width: 90%;
+      border-radius: 10px;
+      margin: 20px auto;
+      display: block;
+      box-shadow: 0 0 8px rgba(0,0,0,0.2);
+    }
+    #label-container div {
+      margin-top: 8px;
+      font-size: 1.1em;
+    }
+  </style>
+</head>
+
+<body>
+  <h1>🧘‍♀️ Clasificador de Posturas de Yoga</h1>
+  <p>Sube una imagen y descubre qué postura detecta el modelo.</p>
+
+  <input type="file" accept="image/*" onchange="predictImage(event)">
+  <img id="preview" alt="Vista previa" />
+  <div id="label-container"></div>
+
+  <script>
+    // Ruta local donde están los archivos del modelo
+    const URL = "C:\Users\ComisionesFuxion\Downloads\Modelo_para_subir_en_la_nube";
+    let model, maxPredictions;
+
+    // Inicializa el modelo
+    async function init() {
+      const modelURL = URL + "model.json";
+      const metadataURL = URL + "metadata.json";
+      model = await tmImage.load(modelURL, metadataURL);
+      maxPredictions = model.getTotalClasses();
+    }
+
+    // Predice la clase de la imagen cargada
+    async function predictImage(event) {
+      const image = document.getElementById("preview");
+      image.src = URL.createObjectURL(event.target.files[0]);
+
+      if (!model) {
+        document.getElementById("label-container").innerHTML = "⏳ Cargando modelo...";
+        await init();
+      }
+
+      image.onload = async () => {
+        const prediction = await model.predict(image);
+        const container = document.getElementById("label-container");
+        container.innerHTML = "";
+
+        prediction.forEach(p => {
+          const porcentaje = (p.probability * 100).toFixed(2);
+          container.innerHTML += `<div><b>${p.className}:</b> ${porcentaje}%</div>`;
+        });
+      };
+    }
+  </script>
+</body>
+</html>
